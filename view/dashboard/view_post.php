@@ -18,6 +18,19 @@ if (!$post_result || mysqli_num_rows($post_result) == 0) {
 }
 $post = mysqli_fetch_assoc($post_result);
 
+// Fetch categories for the post
+$sql_categories = "SELECT c.name FROM categories c 
+                  JOIN post_categories pc ON c.category_id = pc.category_id 
+                  WHERE pc.post_id = $post_id";
+$categories_result = mysqli_query($conn, $sql_categories);
+$categories = [];
+if ($categories_result && mysqli_num_rows($categories_result) > 0) {
+    while ($row = mysqli_fetch_assoc($categories_result)) {
+        $categories[] = $row['name'];
+    }
+}
+mysqli_free_result($categories_result);
+
 // Handle comment submission
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['content'])) {
     $content = mysqli_real_escape_string($conn, $_POST['content']);
@@ -181,7 +194,8 @@ mysqli_close($conn);
         <div class="post-meta">
             Author ID: <?= htmlspecialchars($post['author_id']) ?> | 
             Status: <?= htmlspecialchars($post['status']) ?> | 
-            Created: <?= htmlspecialchars($post['created_at']) ?>
+            Created: <?= htmlspecialchars($post['created_at']) ?> |
+            Categories: <?= !empty($categories) ? htmlspecialchars(implode(', ', $categories)) : 'No categories' ?>
         </div>
         <div class="post-content">
             <?= $post['content'] ?>

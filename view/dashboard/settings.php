@@ -2,8 +2,13 @@
 session_start();
 include "../../model/database.php";
 
-// Get user ID and username from session
-$userId = isset($_SESSION['user_id']) ? (int)$_SESSION['user_id'] : 1;
+// Redirect to login if user_id is not set
+if (!isset($_SESSION['user_id'])) {
+    header("Location: login.php");
+    exit();
+}
+
+$userId = (int) $_SESSION['user_id'];
 $username = isset($_SESSION['username']) ? mysqli_real_escape_string($conn, $_SESSION['username']) : '';
 
 // Initialize profile data array with default values
@@ -53,21 +58,34 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $fileExt = strtolower(pathinfo($_FILES['picture']['name'], PATHINFO_EXTENSION));
                 if (!in_array($fileExt, ['jpg', 'jpeg', 'png', 'gif'])) {
                     $message = "Only JPG, PNG, and GIF files are allowed.";
+                } elseif ($_FILES['picture']['size'] > 2 * 1024 * 1024) { // Limit to 2MB
+                    $message = "File size exceeds 2MB limit.";
                 } else {
                     $newFileName = uniqid('profile_', true) . '.' . $fileExt;
                     $uploadDir = __DIR__ . '/blog/view/image/';
+                    $uploadPath = $uploadDir . $newFileName;
+
+                    // Ensure directory exists and is writable
                     if (!is_dir($uploadDir)) {
-                        mkdir($uploadDir, 0755, true);
-                    }
-                    if (move_uploaded_file($_FILES['picture']['tmp_name'], $uploadDir . $newFileName)) {
-                        if ($profilePicFileName && file_exists($uploadDir . $profilePicFileName)) {
-                            unlink($uploadDir . $profilePicFileName);
+                        if (!mkdir($uploadDir, 0755, true)) {
+                            $message = "Failed to create upload directory.";
                         }
-                        $profilePicFileName = $newFileName;
+                    } elseif (!is_writable($uploadDir)) {
+                        $message = "Upload directory is not writable.";
                     } else {
-                        $message = "Failed to upload image.";
+                        if (move_uploaded_file($_FILES['picture']['tmp_name'], $uploadPath)) {
+                            // Delete old image if it exists
+                            if ($profilePicFileName && file_exists($uploadDir . $profilePicFileName)) {
+                                unlink($uploadDir . $profilePicFileName);
+                            }
+                            $profilePicFileName = $newFileName;
+                        } else {
+                            $message = "Failed to upload image.";
+                        }
                     }
                 }
+            } elseif (isset($_FILES['picture']) && $_FILES['picture']['error'] !== UPLOAD_ERR_NO_FILE) {
+                $message = "Error uploading file: " . $_FILES['picture']['error'];
             }
 
             // Proceed only if no error message
@@ -170,9 +188,7 @@ mysqli_close($conn);
             border-radius: 6px;
             background-color: #0366d6;
             color: white;
-            cursor: pointer
-
-            ;
+            cursor: pointer;
             transition: background-color 0.3s ease;
             margin-right: 10px;
         }

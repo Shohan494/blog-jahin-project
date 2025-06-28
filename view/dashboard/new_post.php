@@ -1,33 +1,48 @@
 <?php
-
 session_start();
 include "../../model/database.php";
 
+// Fetch all categories
+$sql_categories = "SELECT * FROM categories";
+$result_categories = mysqli_query($conn, $sql_categories);
+
+// Handle form submission
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $title = mysqli_real_escape_string($conn, $_POST['title']);
     $content = mysqli_real_escape_string($conn, $_POST['content']);
     $author_id = (int)$_POST['author_id'];
     $status = mysqli_real_escape_string($conn, $_POST['status']);
+    $categories = isset($_POST['categories']) ? $_POST['categories'] : [];
 
-    $sql = "INSERT INTO posts (title, content, author_id, status) VALUES ('$title', '$content', $author_id, '$status')";
-    
-    // just show user some message notification as text
-    // if (mysqli_query($conn, $sql)) {
-    //     echo "<p style='color: green;'>Post created successfully!</p>";
-    // } else {
-    //     echo "<p style='color: red;'>Error: " . mysqli_error($conn) . "</p>";
-    // }
-    
-    // redirecting user to another page after post creation
-    if (mysqli_query($conn, $sql)) {
+    // Start transaction
+    mysqli_begin_transaction($conn);
+
+    try {
+        // Insert post
+        $sql = "INSERT INTO posts (title, content, author_id, status) VALUES ('$title', '$content', $author_id, '$status')";
+        if (!mysqli_query($conn, $sql)) {
+            throw new Exception("Error creating post: " . mysqli_error($conn));
+        }
+
+        $post_id = mysqli_insert_id($conn);
+
+        // Insert post-category relationships
+        foreach ($categories as $category_id) {
+            $category_id = (int)$category_id;
+            $sql = "INSERT INTO post_categories (post_id, category_id) VALUES ($post_id, $category_id)";
+            if (!mysqli_query($conn, $sql)) {
+                throw new Exception("Error linking category: " . mysqli_error($conn));
+            }
+        }
+
+        mysqli_commit($conn);
         header("Location: see_post.php");
         exit;
-    } else {
-        echo "<p style='color: red;'>Error: " . mysqli_error($conn) . "</p>";
+    } catch (Exception $e) {
+        mysqli_rollback($conn);
+        echo "<p style='color: red;'>Error: " . $e->getMessage() . "</p>";
     }
 }
-
-mysqli_close($conn);
 ?>
 
 <!DOCTYPE html>
@@ -72,7 +87,7 @@ mysqli_close($conn);
     <form method="POST" action="<?php echo htmlspecialchars($_SERVER["PHP_SELF"]); ?>">
         <div class="form-group">
             <label for="title">Title:</label>
-            <input type="text" id="title" name="title" required>
+            <input type="text" id="title" name="title " required>
         </div>
         <div class="form-group">
             <label for="content">Content:</label>
@@ -87,6 +102,16 @@ mysqli_close($conn);
             <select id="status" name="status">
                 <option value="draft">Draft</option>
                 <option value="published">Published</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label for="categories">Categories:</label>
+            <select id="categories" name="categories[]" multiple>
+                <?php while ($category = mysqli_fetch_assoc($result_categories)): ?>
+                    <option value="<?php echo $category['category_id']; ?>">
+                        <?php echo htmlspecialchars($category['name']); ?>
+                    </option>
+                <?php endwhile; ?>
             </select>
         </div>
         <button type="submit">Create Post</button>

@@ -174,6 +174,7 @@ include "../../model/database.php";
             <div class="brand">AdminPanel</div>
             <nav>
                 <a href="admindashboard.php" class="active">Dashboard</a>
+                <a href="manage_categories.php">Categories Management</a>
                 <a href="new_post.php">Create New Post</a>
                 <a href="see_post.php">See All Posts</a>
                 <a href="authors_info.php">Authors Info</a>
