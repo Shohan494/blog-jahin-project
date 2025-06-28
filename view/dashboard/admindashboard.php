@@ -2,6 +2,8 @@
 session_start();
 include "../../model/database.php";
 ?>
+
+
 <!DOCTYPE html>
 <html lang="en">
 
@@ -172,7 +174,8 @@ include "../../model/database.php";
             <div class="brand">AdminPanel</div>
             <nav>
                 <a href="admindashboard.php" class="active">Dashboard</a>
-                <a href="post.php">Posts</a>
+                <a href="new_post.php">Create New Post</a>
+                <a href="see_post.php">See All Posts</a>
                 <a href="authors_info.php">Authors Info</a>
                 <a href="newsletter.php">Newsletter</a>
                 <a href="tags.php">Tags</a>

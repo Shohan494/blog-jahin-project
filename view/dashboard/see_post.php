@@ -279,7 +279,6 @@ if (isset($_GET['edit_post'])) {
                     <td><?= htmlspecialchars($row['created_at']) ?></td>
                     <td class="actions">
                         <a class="edit" href="?edit_post=<?= $row['post_id'] ?>">Edit</a>
-                        <a class="copy" href="copy.php?id=<?= $row['post_id'] ?>">Copy</a>
                         <a class="delete" href="?post_id=<?= $row['post_id'] ?>&author_id=<?= $row['author_id'] ?>"
                             onclick="return confirm('Are you sure?')">Delete</a>
                     </td>

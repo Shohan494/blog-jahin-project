@@ -1,6 +1,6 @@
 <?php
 session_start();
-include "../../model/database.php"; // Update path if needed
+include "model/database.php"; // Update path if needed
 
 $username = $password = $err = "";
 
@@ -31,7 +31,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                         setcookie("username", $username, time() + (86400 * 30), "/");
                     }
 
-                    header("Location: admindashboard.php");
+                    header("Location: view/dashboard/admindashboard.php");
                     exit();
                 } else {
                     $err = "User role or ID invalid!";
