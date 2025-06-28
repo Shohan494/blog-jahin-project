@@ -12,8 +12,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $email = !empty($_POST['email']) ? mysqli_real_escape_string($conn, $_POST['email']) : "";
     $password = !empty($_POST['password']) ? mysqli_real_escape_string($conn, $_POST['password']) : "";
 
-    // You can allow role from user input or default it here:
-    $role = !empty($_POST['role']) ? mysqli_real_escape_string($conn, $_POST['role']) : "user"; // Default role = user
+    $role = "user"; // default
 
     // Check all required fields
     if ($username && $firstname && $lastname && $email && $password) {
@@ -34,15 +33,15 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                     VALUES ('$username', '$firstname', '$lastname', '$email', '$hashedPassword', '$role')";
 
             if (mysqli_query($conn, $sql)) {
-                $done = "✅ Sign Up Successfully!";
+                $done = "Sign Up Success";
                 // Optionally redirect after success
-                 header("refresh:2;url=login.php");
+                 header("Location: login.php");
             } else {
-                $err = "❌ Database error during insert: " . mysqli_error($conn);
+                $err = "Database error during insert: " . mysqli_error($conn);
             }
         }
     } else {
-        $err = "❌ All fields are required!";
+        $err = "All fields are required";
     }
 }
 ?>
@@ -168,13 +167,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
                 <h4>Password:</h4>
                 <input type="password" name="password" required>
-
-                <!-- Optional: Role select dropdown -->
-                <h4>Role:</h4>
-                <select name="role" required>
-                    <option value="user" selected>User</option>
-                    <option value="admin">Admin</option>
-                </select>
 
                 <input type="submit" value="Sign Up">
 

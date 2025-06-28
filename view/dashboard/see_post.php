@@ -2,6 +2,11 @@
 session_start();
 include "../../model/database.php";
 
+if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'admin') {
+    header("Location: login.php");
+    exit();
+}
+
 // Handle delete request
 if (isset($_GET['post_id'], $_GET['author_id'])) {
     $post_id = (int) $_GET['post_id'];
@@ -224,7 +229,7 @@ if (isset($_GET['edit_post'])) {
     <h1>All Blog Posts</h1>
 
     <div class="top-bar">
-        <a href="post.php" class="home-btn">Back</a>
+        <a href="admindashboard.php" class="home-btn">Back</a>
     </div>
 
     <?php if (isset($_GET['message'])): ?>

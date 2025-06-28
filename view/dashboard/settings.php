@@ -2,12 +2,10 @@
 session_start();
 include "../../model/database.php";
 
-// Redirect to login if user_id is not set
-if (!isset($_SESSION['user_id'])) {
+if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'admin') {
     header("Location: login.php");
     exit();
 }
-
 $userId = (int) $_SESSION['user_id'];
 $username = isset($_SESSION['username']) ? mysqli_real_escape_string($conn, $_SESSION['username']) : '';
 
@@ -34,10 +32,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $email = mysqli_real_escape_string($conn, trim($_POST['email'] ?? ''));
     $status = mysqli_real_escape_string($conn, $_POST['status'] ?? 'Active');
 
-    if (!$email) {
-        $message = "Email is required.";
-    } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
-        $message = "Invalid email format.";
+    if (!$status) {
+        $message = "Status is required.";
     } else {
         // Check if username exists in 'users' table (foreign key check)
         $sqlUserCheck = "SELECT COUNT(*) AS count FROM users WHERE username = '$username'";
@@ -98,13 +94,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                 if ($exists) {
                     // Update existing profile
-                    $sqlUpdate = "UPDATE user_profile SET email = '$email', status = '$status', profile_pic = " . 
+                    $sqlUpdate = "UPDATE user_profile SET status = '$status', profile_pic = " . 
                                  ($profilePicFileName ? "'$profilePicFileName'" : "NULL") . ", updated_at = NOW() WHERE pro_id = $userId";
                     $result = mysqli_query($conn, $sqlUpdate);
                 } else {
                     // Insert new profile
-                    $sqlInsert = "INSERT INTO user_profile (pro_id, username, email, status, profile_pic, updated_at) VALUES " .
-                                 "($userId, '$username', '$email', '$status', " . 
+                    $sqlInsert = "INSERT INTO user_profile (pro_id, username, status, profile_pic, updated_at) VALUES " .
+                                 "($userId, '$username', '$status', " . 
                                  ($profilePicFileName ? "'$profilePicFileName'" : "NULL") . ", NOW())";
                     $result = mysqli_query($conn, $sqlInsert);
                 }
@@ -112,7 +108,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 if ($result) {
                     $message = "Profile updated successfully.";
                     // Reload updated profile data
-                    $sqlReload = "SELECT username, email, status, profile_pic, updated_at FROM user_profile WHERE pro_id = $userId";
+                    $sqlReload = "SELECT username, status, profile_pic, updated_at FROM user_profile WHERE pro_id = $userId";
                     $resReload = mysqli_query($conn, $sqlReload);
                     if ($resReload && mysqli_num_rows($resReload) > 0) {
                         $profileData = mysqli_fetch_assoc($resReload);
@@ -239,10 +235,7 @@ mysqli_close($conn);
         <form method="POST" enctype="multipart/form-data">
             <label for="picture">Profile Picture (JPG, PNG, GIF):</label>
             <input type="file" name="picture" id="picture">
-
-            <label for="email">Email*:</label>
-            <input type="email" name="email" id="email" required value="<?php echo htmlspecialchars($profileData['email']); ?>">
-
+            
             <label for="status">Status:</label>
             <select name="status" id="status">
                 <option value="Active" <?php if ($profileData['status'] == 'Active') echo 'selected'; ?>>Active</option>
@@ -257,7 +250,6 @@ mysqli_close($conn);
     <script>
         function clearFields() {
             document.getElementById('picture').value = '';
-            document.getElementById('email').value = '';
             document.getElementById('status').selectedIndex = 0;
         }
     </script>

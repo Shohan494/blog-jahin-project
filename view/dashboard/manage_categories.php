@@ -2,6 +2,11 @@
 session_start();
 include "../../model/database.php";
 
+if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'admin') {
+    header("Location: login.php");
+    exit();
+}
+
 // Initialize variables
 $message = '';
 $editing = false;
@@ -199,7 +204,7 @@ mysqli_close($conn);
     <h1>Manage Categories</h1>
 
     <div class="top-bar">
-        <a href="post.php" class="home-btn">Back</a>
+        <a href="admindashboard.php" class="home-btn">Back</a>
     </div>
 
     <?php if ($message): ?>

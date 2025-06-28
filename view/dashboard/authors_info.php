@@ -2,60 +2,60 @@
 session_start();
 include "../../model/database.php"; // Adjust path if needed
 
-// Simulated login for testing (replace with real login logic)
-if (!isset($_SESSION['role'])) {
-    echo "Access Denied. Please log in.";
-    exit;
+// Check admin access
+if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'admin') {
+header("Location: login.php");
+    exit();
 }
 
 // Handle delete
-if (isset($_GET['delete_author']) && $_SESSION['role'] === 'admin') {
+if (isset($_GET['delete_author'])) {
     $author_id = (int) $_GET['delete_author'];
-    $stmt = $conn->prepare("DELETE FROM authors WHERE author_id = ?");
-    $stmt->bind_param("i", $author_id);
-    $stmt->execute();
+    $sql = "DELETE FROM authors WHERE author_id = $author_id";
+    mysqli_query($conn, $sql);
     header("Location: authors_info.php?message=Author+deleted+successfully");
     exit;
 }
 
 // Handle add/update author
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && $_SESSION['role'] === 'admin') {
-    $name = $_POST['name'];
-    $email = $_POST['email'];
-    $bio = $_POST['bio'];
-    $author_id = $_POST['author_id'] ?? null;
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $name = mysqli_real_escape_string($conn, $_POST['name']);
+    $email = mysqli_real_escape_string($conn, $_POST['email']);
+    $bio = mysqli_real_escape_string($conn, $_POST['bio']);
+    $author_id = isset($_POST['author_id']) ? (int) $_POST['author_id'] : null;
 
     if ($author_id) {
-        $stmt = $conn->prepare("UPDATE authors SET name=?, email=?, bio=? WHERE author_id=?");
-        $stmt->bind_param("sssi", $name, $email, $bio, $author_id);
+        $sql = "UPDATE authors SET name='$name', email='$email', bio='$bio' WHERE author_id=$author_id";
     } else {
-        $stmt = $conn->prepare("INSERT INTO authors (name, email, bio, created_at) VALUES (?, ?, ?, NOW())");
-        $stmt->bind_param("sss", $name, $email, $bio);
+        $sql = "INSERT INTO authors (name, email, bio, created_at) VALUES ('$name', '$email', '$bio', NOW())";
     }
-    $stmt->execute();
+    mysqli_query($conn, $sql);
     header("Location: authors_info.php?message=Author+saved+successfully");
     exit;
 }
 
 // Fetch authors
-$authors = $conn->query("SELECT * FROM authors ORDER BY created_at DESC");
+$sql = "SELECT * FROM authors ORDER BY created_at DESC";
+$authors = mysqli_query($conn, $sql);
 
 // Edit mode
 $editing = false;
 $edit_data = ['author_id' => '', 'name' => '', 'email' => '', 'bio' => ''];
-if (isset($_GET['edit']) && $_SESSION['role'] === 'admin') {
+if (isset($_GET['edit'])) {
     $editing = true;
-    $stmt = $conn->prepare("SELECT * FROM authors WHERE author_id = ?");
-    $stmt->bind_param("i", $_GET['edit']);
-    $stmt->execute();
-    $result = $stmt->get_result();
-    $edit_data = $result->fetch_assoc();
+    $edit_id = (int) $_GET['edit'];
+    $sql = "SELECT * FROM authors WHERE author_id = $edit_id";
+    $result = mysqli_query($conn, $sql);
+    if ($result && mysqli_num_rows($result) > 0) {
+        $edit_data = mysqli_fetch_assoc($result);
+    }
 }
+
+mysqli_close($conn);
 ?>
 
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
     <title>Author Management</title>
@@ -65,19 +65,15 @@ if (isset($_GET['edit']) && $_SESSION['role'] === 'admin') {
             background: #f4f4f4;
             padding: 20px;
         }
-
-        h1,
-        h2 {
+        h1, h2 {
             text-align: center;
             color: #333;
         }
-
         .top-bar {
             display: flex;
             justify-content: space-between;
             margin-bottom: 20px;
         }
-
         .btn {
             background-color: #007BFF;
             color: white;
@@ -86,11 +82,9 @@ if (isset($_GET['edit']) && $_SESSION['role'] === 'admin') {
             text-decoration: none;
             font-weight: bold;
         }
-
         .btn:hover {
             background-color: #0056b3;
         }
-
         table {
             width: 100%;
             border-collapse: collapse;
@@ -98,27 +92,21 @@ if (isset($_GET['edit']) && $_SESSION['role'] === 'admin') {
             margin-bottom: 30px;
             box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
         }
-
-        th,
-        td {
+        th, td {
             padding: 12px;
             border-bottom: 1px solid #ccc;
         }
-
         th {
             background-color: #007BFF;
             color: white;
         }
-
         tr:hover {
             background: #f1f1f1;
         }
-
         .actions {
             display: flex;
             gap: 5px;
         }
-
         .actions a {
             padding: 6px 12px;
             border-radius: 4px;
@@ -126,22 +114,18 @@ if (isset($_GET['edit']) && $_SESSION['role'] === 'admin') {
             text-decoration: none;
             font-size: 14px;
         }
-
         .edit {
             background-color: #28a745;
         }
-
         .delete {
             background-color: #dc3545;
         }
-
         .form-container {
             background: #fff;
             padding: 20px;
             margin-bottom: 30px;
             box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
         }
-
         input[type="text"],
         input[type="email"],
         textarea {
@@ -151,7 +135,6 @@ if (isset($_GET['edit']) && $_SESSION['role'] === 'admin') {
             border: 1px solid #ccc;
             border-radius: 4px;
         }
-
         .message {
             padding: 10px;
             margin: 15px 0;
@@ -162,35 +145,30 @@ if (isset($_GET['edit']) && $_SESSION['role'] === 'admin') {
         }
     </style>
 </head>
-
 <body>
-
     <h1>Author Management</h1>
-
     <div class="top-bar">
-        <div><strong>User:</strong> <?= htmlspecialchars($_SESSION['username']) ?> (<?= $_SESSION['role'] ?>)</div>
-        <a href="post.php" class="btn">Home</a>
+        <div><strong>User:</strong> <?php echo htmlspecialchars($_SESSION['username'] ?? 'Unknown'); ?> (<?php echo htmlspecialchars($_SESSION['role'] ?? 'N/A'); ?>)</div>
+        <a href="admindashboard.php" class="btn">Back</a>
     </div>
 
     <?php if (isset($_GET['message'])): ?>
-        <div class="message"><?= htmlspecialchars($_GET['message']) ?></div>
+        <div class="message"><?php echo htmlspecialchars($_GET['message']); ?></div>
     <?php endif; ?>
 
-    <?php if ($_SESSION['role'] === 'admin'): ?>
-        <div class="form-container">
-            <h2><?= $editing ? 'Edit Author' : 'Add Author' ?></h2>
-            <form method="POST">
-                <input type="hidden" name="author_id" value="<?= htmlspecialchars($edit_data['author_id']) ?>">
-                <label>Name:</label>
-                <input type="text" name="name" required value="<?= htmlspecialchars($edit_data['name']) ?>">
-                <label>Email:</label>
-                <input type="email" name="email" required value="<?= htmlspecialchars($edit_data['email']) ?>">
-                <label>Bio:</label>
-                <textarea name="bio"><?= htmlspecialchars($edit_data['bio']) ?></textarea>
-                <input class="btn" type="submit" value="<?= $editing ? 'Update Author' : 'Add Author' ?>">
-            </form>
-        </div>
-    <?php endif; ?>
+    <div class="form-container">
+        <h2><?php echo $editing ? 'Edit Author' : 'Add Author'; ?></h2>
+        <form method="POST">
+            <input type="hidden" name="author_id" value="<?php echo htmlspecialchars($edit_data['author_id']); ?>">
+            <label>Name:</label>
+            <input type="text" name="name" required value="<?php echo htmlspecialchars($edit_data['name']); ?>">
+            <label>Email:</label>
+            <input type="email" name="email" required value="<?php echo htmlspecialchars($edit_data['email']); ?>">
+            <label>Bio:</label>
+            <textarea name="bio"><?php echo htmlspecialchars($edit_data['bio']); ?></textarea>
+            <input class="btn" type="submit" value="<?php echo $editing ? 'Update Author' : 'Add Author'; ?>">
+        </form>
+    </div>
 
     <h2>All Authors</h2>
     <table>
@@ -202,26 +180,19 @@ if (isset($_GET['edit']) && $_SESSION['role'] === 'admin') {
             <th>Created At</th>
             <th>Actions</th>
         </tr>
-        <?php while ($row = $authors->fetch_assoc()): ?>
+        <?php while ($row = mysqli_fetch_assoc($authors)): ?>
             <tr>
-                <td><?= $row['author_id'] ?></td>
-                <td><?= htmlspecialchars($row['name']) ?></td>
-                <td><?= htmlspecialchars($row['email']) ?></td>
-                <td><?= htmlspecialchars($row['bio']) ?></td>
-                <td><?= $row['created_at'] ?></td>
+                <td><?php echo htmlspecialchars($row['author_id']); ?></td>
+                <td><?php echo htmlspecialchars($row['name']); ?></td>
+                <td><?php echo htmlspecialchars($row['email']); ?></td>
+                <td><?php echo htmlspecialchars($row['bio']); ?></td>
+                <td><?php echo htmlspecialchars($row['created_at']); ?></td>
                 <td class="actions">
-                    <?php if ($_SESSION['role'] === 'admin'): ?>
-                        <a class="edit" href="?edit=<?= $row['author_id'] ?>">Edit</a>
-                        <a class="delete" href="?delete_author=<?= $row['author_id'] ?>"
-                            onclick="return confirm('Delete this author?')">Delete</a>
-                    <?php else: ?>
-                        View Only
-                    <?php endif; ?>
+                    <a class="edit" href="?edit=<?php echo $row['author_id']; ?>">Edit</a>
+                    <a class="delete" href="?delete_author=<?php echo $row['author_id']; ?>" onclick="return confirm('Delete this author?')">Delete</a>
                 </td>
             </tr>
         <?php endwhile; ?>
     </table>
-
 </body>
-
 </html>

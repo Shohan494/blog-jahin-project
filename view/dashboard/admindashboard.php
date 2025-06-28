@@ -179,7 +179,6 @@ include "../../model/database.php";
                 <a href="see_post.php">See All Posts</a>
                 <a href="authors_info.php">Authors Info</a>
                 <a href="newsletter.php">Newsletter</a>
-                <a href="tags.php">Tags</a>
             </nav>
         </aside>
 

@@ -11,11 +11,13 @@
 
 - Sir's suggestions to use - cookie, ajax, server, session, mvc
 
+- basic info about admin - we have manually entered the row through query/dbms
 
 ####
 
 - for later: 
     - when sign up, also insert for user_profile
+    - alike profile update in settings, email field validation
 
     - using controller for routing( which link or page will go where, will call which page or function)
     - in comments table, there is user id and also author id - if needed will fix it
@@ -30,11 +32,12 @@
 
     - comment section has some more advanced features probably by requirements
 
-    - categories while creating posts
+    - [x] categories while creating posts
     - role based update/delete
     - for each file convert into raw php mysql
 
     - when deleted this message appears in url - message=Post+deleted+successfully
+    - categories and tags functioning are kind of similar. later will discuss
     
 
 #### Questions:

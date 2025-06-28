@@ -2,7 +2,12 @@
 session_start();
 include "../../model/database.php"; // Your DB connection file
 
-// Handle Add Category
+if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'admin') {
+  header("Location: login.php");
+  exit();
+}
+
+// Handle Add Category`
 if (isset($_POST['add_category'])) {
     $name = trim($_POST['name']);
     if ($name !== '') {
@@ -62,6 +67,51 @@ $result = $conn->query("SELECT * FROM categories ORDER BY name ASC");
 <head>
 <meta charset="UTF-8" />
 <title>Manage Categories</title>
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+</head>
+<body>
+  
+
+
+
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="brand">AdminPanel</div>
+            <nav>
+                <a href="admindashboard.php" class="active">Dashboard</a>
+                <a href="manage_categories.php">Categories Management</a>
+                <a href="new_post.php">Create New Post</a>
+                <a href="see_post.php">See All Posts</a>
+                <a href="authors_info.php">Authors Info</a>
+                <a href="newsletter.php">Newsletter</a>
+                <a href="tags.php">Tags</a>
+            </nav>
+        </aside>
+
+        <!-- Main Content -->
+        <div class="main">
+            <!-- Top Bar -->
+            <div class="topbar">
+                <button title="Notifications">🔔</button>
+                <div class="profile" id="profileBtn">
+                    <img src="../image/jahin.jpg" alt="Profile" class="avatar">
+                    <div class="dropdown" id="profileDropdown">
+                        <a href="myaccount.php">My Profile</a>
+                        <a href="settings.php">Settings</a>
+                        <a href="logout.php">Logout</a>
+                    </div>
+                </div>
+            </div>
+
+
+</body>
+</html>
 <style>
   body { font-family: Arial, sans-serif; padding: 20px; background: #f9f9f9; }
   table { border-collapse: collapse; width: 50%; margin-bottom: 20px; }

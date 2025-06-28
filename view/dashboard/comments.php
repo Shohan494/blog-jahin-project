@@ -2,6 +2,11 @@
 session_start();
 include "../../model/database.php";
 
+if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'admin') {
+    header("Location: login.php");
+    exit();
+}
+
 // Delete comment by comment_id
 if (isset($_GET['delete_comment'])) {
     $comment_id = (int) $_GET['delete_comment'];

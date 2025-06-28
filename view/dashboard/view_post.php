@@ -2,6 +2,11 @@
 session_start();
 include "../../model/database.php";
 
+if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'admin') {
+    header("Location: login.php");
+    exit();
+}
+
 if (!isset($_GET['post_id'])) {
     header("Location: see_post.php?message=Invalid+post+ID");
     exit();

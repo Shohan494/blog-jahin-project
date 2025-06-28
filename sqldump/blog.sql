@@ -119,10 +119,7 @@ CREATE TABLE `users` (
 --
 
 INSERT INTO `users` (`user_id`, `username`, `firstname`, `lastname`, `email`, `password`, `role`) VALUES
-(102, 'jahin', 'Jahin ', 'Sultana', 'jahinsultana21@gmail.com', '$2y$10$G9LU/s5woxnhliDrd38Lp.BeAn2NsrzN4HigplrnSlxqoxTctMmmG', 'admin'),
-(103, 'nirob', 'Farid', 'Nirob', 'nirob20@gmail.com', '$2y$10$dycEARtM2fkn.MkqrChIfesqpuutNekBla/fH8hhNc79vo2q3Grxq', 'user'),
-(104, 'pr', 'Pritom', 'Dev', 'hassdg@gmail.com', '$2y$10$FDEUlHMOxcAWYoo6xUlcvO0EkfzlynEj1fqKTV1f5AHFhUbZk8voe', 'admin');
-
+(102, 'jahin', 'Jahin ', 'Sultana', 'jahinsultana21@gmail.com', '$2y$10$G9LU/s5woxnhliDrd38Lp.BeAn2NsrzN4HigplrnSlxqoxTctMmmG', 'admin')
 -- --------------------------------------------------------
 
 --
@@ -240,7 +237,6 @@ COMMIT;
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
 /*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
-
 
 CREATE TABLE `categories` (
   `category_id` int(11) NOT NULL AUTO_INCREMENT,

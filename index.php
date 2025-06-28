@@ -1,3 +1,3 @@
 <?php
 
-include "view/dashboard/login.php"; // Update path if needed
+header("Location: view/dashboard/login.php");

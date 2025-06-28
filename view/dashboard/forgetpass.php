@@ -14,14 +14,16 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $hashedPassword = password_hash($newPassword, PASSWORD_DEFAULT);
 
         // Check if username and email match
-        $sqlUserCheck = "SELECT * FROM user WHERE username = '$username' AND email = '$email'";
+        $sqlUserCheck = "SELECT * FROM users WHERE username = '$username' AND email = '$email'";
         $result = mysqli_query($conn, $sqlUserCheck);
 
         if (mysqli_num_rows($result) > 0) {
             // Update password
-            $sqlUpdate = "UPDATE user SET password = '$hashedPassword' WHERE username = '$username' AND email = '$email'";
+            $sqlUpdate = "UPDATE users SET password = '$hashedPassword' WHERE username = '$username' AND email = '$email'";
             if (mysqli_query($conn, $sqlUpdate)) {
-                $done = "Password updated successfully!";
+                $_SESSION['message'] = "Password updated successfully!";
+
+                header("Location: login.php");
             } else {
                 $err = "Database error: " . mysqli_error($conn);
             }

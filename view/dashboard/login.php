@@ -1,26 +1,44 @@
 <?php
 session_start();
-include "model/database.php"; // Update path if needed
+include "../../model/database.php"; // Assumes blog/view/ directory
 
+// Initialize variables
 $username = $password = $err = "";
+
+// Check for remember_me cookie
+if (isset($_SESSION['user_id']) && isset($_COOKIE['username'])) {
+    $username = mysqli_real_escape_string($conn, $_COOKIE['username']);
+    $sql = "SELECT user_id, role FROM users WHERE username = '$username' AND role = 'admin'";
+    $result = mysqli_query($conn, $sql);
+
+    print_r($result);
+    if ($result && mysqli_num_rows($result) > 0) {
+        $row = mysqli_fetch_assoc($result);
+        $_SESSION['username'] = $username;
+        $_SESSION['user_id'] = $row['user_id'];
+        $_SESSION['role'] = $row['role'];
+        header("Location: ../dashboard/admindashboard.php");
+        exit();
+    }
+}
 
 // Handle form submission
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     if (!empty($_POST['username']) && !empty($_POST['password'])) {
         $username = trim(mysqli_real_escape_string($conn, $_POST['username']));
-        $password = trim($_POST['password']); // Plain-text password input from form
+        $password = trim($_POST['password']);
 
         // Fetch user by username
-        $sql = "SELECT * FROM users WHERE username = '$username' AND role = 'admin'";
+        $sql = "SELECT user_id, username, password, role FROM users WHERE username = '$username' AND role = 'admin'";
         $result = mysqli_query($conn, $sql);
 
-        if (mysqli_num_rows($result) > 0) {
+        if ($result && mysqli_num_rows($result) > 0) {
             $row = mysqli_fetch_assoc($result);
-            $dbPasswordHash = $row['password']; // This should be hashed password stored in DB
+            $dbPasswordHash = $row['password'];
             $dbUserId = $row['user_id'];
             $dbRole = $row['role'];
 
-            // Use password_verify() to check password
+            // Verify password
             if (password_verify($password, $dbPasswordHash)) {
                 if (!empty($dbRole) && !empty($dbUserId)) {
                     $_SESSION['username'] = $username;
@@ -29,9 +47,12 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
                     if (!empty($_POST['remember_me'])) {
                         setcookie("username", $username, time() + (86400 * 30), "/");
+                    } else {
+                        // Clear cookie if remember_me is not checked
+                        setcookie("username", "", time() - 3600, "/");
                     }
 
-                    header("Location: view/dashboard/admindashboard.php");
+                    header("Location: ../dashboard/admindashboard.php");
                     exit();
                 } else {
                     $err = "User role or ID invalid!";
@@ -40,36 +61,34 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 $err = "Incorrect password!";
             }
         } else {
-            $err = "Username not found!";
+            $err = "Admin not found!";
         }
+        mysqli_free_result($result);
     } else {
         $err = "Please fill in both username and password.";
     }
 }
+
+mysqli_close($conn);
 ?>
 
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
     <title>Log In</title>
     <style>
-        /* Your existing CSS */
         * {
             box-sizing: border-box;
         }
-
         body {
             margin: 0;
             font-family: Arial, sans-serif;
         }
-
         .container {
             display: flex;
             height: 100vh;
         }
-
         .form-panel {
             flex-basis: 50%;
             padding: 8px;
@@ -79,20 +98,16 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             align-items: center;
             background-color: #f2f2f2;
         }
-
         .form-panel h2 {
             margin-bottom: 20px;
         }
-
         form {
             width: 100%;
             max-width: 300px;
         }
-
         .form-panel h4 {
             margin: 15px 0 5px;
         }
-
         .form-panel input[type="text"],
         .form-panel input[type="password"] {
             width: 100%;
@@ -101,7 +116,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             border: 1px solid #ccc;
             border-radius: 4px;
         }
-
         .form-panel input[type="submit"] {
             padding: 12px;
             font-size: 16px;
@@ -113,72 +127,71 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             cursor: pointer;
             width: 100%;
         }
-
         .form-panel input[type="submit"]:hover {
             background-color: #45a049;
         }
-
         .image-panel {
             flex-basis: 50%;
             overflow: hidden;
         }
-
         .image-panel img {
             width: 100%;
             height: 100%;
             object-fit: cover;
         }
-
         .password-wrapper {
             display: flex;
             flex-direction: column;
         }
-
         .password-label {
             display: flex;
             justify-content: space-between;
             align-items: center;
         }
-
         .password-label h4 {
             margin: 0;
         }
-
         .password-label a {
             font-size: 0.9em;
             text-decoration: none;
         }
-
         .error {
             color: red;
             margin-bottom: 15px;
+            text-align: center;
+            font-weight: bold;
         }
-
         .success {
             color: green;
             margin-bottom: 15px;
+            text-align: center;
+            font-weight: bold;
         }
     </style>
 </head>
-
 <body>
-
     <div class="container">
         <!-- Left panel: Form -->
         <div class="form-panel">
             <h2>Log In</h2>
             <h5>Don't have an account yet?
-                <a href="view/dashboard/signup.php">Sign up</a>
+                <a href="../dashboard/signup.php">Sign up</a>
             </h5>
 
             <!-- Display error message -->
             <?php if (!empty($err)): ?>
-                    <p class="error"><?php echo htmlspecialchars($err); ?></p>
+                <p class="error"><?php echo htmlspecialchars($err); ?></p>
+            <?php endif; ?>
+
+
+            <!-- Display error message -->
+            <?php if (!empty($_SESSION['message'])): ?>
+                <p class="error"><?php echo htmlspecialchars($_SESSION['message']); ?></p>
             <?php endif; ?>
 
             <form action="" method="post">
                 <h4>Username:</h4>
-                <input type="text" name="username" required>
+                <input type="text" name="username" value="<?php echo htmlspecialchars($username); ?>" required>
 
                 <div class="password-wrapper">
                     <div class="password-label">
@@ -203,7 +216,5 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             <img src="../image/login.jpg" alt="Log In Image">
         </div>
     </div>
-
 </body>
-
 </html>
