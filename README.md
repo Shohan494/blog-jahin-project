@@ -15,10 +15,18 @@
 ####
 
 - for later: 
+    - when sign up, also insert for user_profile
+
     - using controller for routing( which link or page will go where, will call which page or function)
     - in comments table, there is user id and also author id - if needed will fix it
     - need to clear about foreign key, more than one is causing issues
     - multiple para post probably is not working
+
+    - logout and logged in check, verify user role for operations
+    - navvar logout fix
+
+    - settings -> status of profile edit check
+    - $sqlCheck = "SELECT COUNT(*) AS count FROM user_profile WHERE pro_id = $userId" (make some alternative approaches)
 
     - comment section has some more advanced features probably by requirements
 

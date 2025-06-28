@@ -168,7 +168,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         <div class="form-panel">
             <h2>Log In</h2>
             <h5>Don't have an account yet?
-                <a href="signup.php">Sign up</a>
+                <a href="view/dashboard/signup.php">Sign up</a>
             </h5>
 
             <!-- Display error message -->
